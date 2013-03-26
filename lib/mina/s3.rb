@@ -58,6 +58,7 @@ namespace 'aws:s3' do
   # Starts a deploy to AWS S3
   desc 'Starts a deploy to AWS S3'
   task :deploy do
+    print_str '-----> Starting AWS S3 deployment'
     files = Dir.glob(s3_files_pattern).each do |file|
       if !File.directory?(file)
         path = file
@@ -74,7 +75,7 @@ namespace 'aws:s3' do
         end
 
         s3_bucket.objects[path].write(contents, options)
-        puts('Deployed ~> %s%s' % [s3_bucket.url, path])
+        print_str 'Deployed ~> %s%s' % [s3_bucket.url, path]
       end # if
     end # files.each
   end
@@ -84,6 +85,6 @@ namespace 'aws:s3' do
   desc 'Empty the AWS S3 bucket'
   task :empty do
     s3_bucket.clear!
-    puts('Cleaned ~> %s' % s3_bucket.url)
+    print_str '-----> Cleaned %s' % s3_bucket.url
   end
 end
