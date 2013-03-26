@@ -10,10 +10,10 @@ require 'logger'
 # ## Settings
 # Any and all of these settings can be overwritten in your `deploy.rb`.
 #
-# ### bucket_name
+# ### s3_bucket_name
 # Sets the S3 bucket name
 
-set_default :s3_bucket, domain
+set_default :s3_bucket_name, domain
 
 # ### aws_access_key_id
 # Sets the default AWS S3 access key ID
@@ -32,34 +32,39 @@ set_default :aws_secret_access_key, 'CHANGE THIS'
 
 set_default :s3_files_pattern, ['assets/**/**', '*.html', '*.css']
 
-# ## Deploy tasks
-# These tasks are meant to be invoked inside deploy scripts, not invoked on
-# their own.
+# ### s3
+# Sets the s3 connection object
 
-# Connects to AWS S3 using provided settings
-def prepare_s3_connection
+set_default :s3, proc{
   # Send logging to STDOUT
-  AWS.config(:logger => Logger.new(STDOUT))
+  AWS.config(:logger => Logger.new(STDOUT)) if verbose_mode?
 
   AWS::S3.new(
     :access_key_id => aws_access_key_id,
     :secret_access_key => aws_secret_access_key
   )
-end
+}
+
+# ### s3_bucket
+# Sets the s3 bucket
+set_default :s3_bucket, proc { s3.buckets[s3_bucket_name] }
+
+# ## Deploy tasks
+# These tasks are meant to be invoked inside deploy scripts, not invoked on
+# their own.
 
 namespace 'aws:s3' do
   # ### aws:s3:deploy
   # Starts a deploy to AWS S3
   desc 'Starts a deploy to AWS S3'
   task :deploy do
-    s3 = prepare_s3_connection
     files = Dir.glob(s3_files_pattern).each do |file|
       if !File.directory?(file)
         path = file
         # Remove preceding slash for S3
         path.gsub!(/^\//, "")
 
-        content = open(file)
+        contents = open(file)
 
         types = MIME::Types.type_for(File.basename(file))
         if types.empty?
@@ -68,8 +73,8 @@ namespace 'aws:s3' do
           options = { :acl => :public_read,:content_type => types[0] }
         end
 
-        # s3.buckets[bucket].objects[path].write(contents, options)
-        puts('AWS S3 OK: %s' % path)
+        s3_bucket.objects[path].write(contents, options)
+        puts('Deployed ~> %s%s' % [s3_bucket.url, path])
       end # if
     end # files.each
   end
@@ -78,8 +83,7 @@ namespace 'aws:s3' do
   # Empties bucket of any files
   desc 'Empty the AWS S3 bucket'
   task :empty do
-    s3 = prepare_s3_connection
-    # s3.buckets[s3_bucket].clear!
-    puts('AWS S3 Cleaned: %s' % s3_bucket)
+    s3_bucket.clear!
+    puts('Cleaned ~> %s' % s3_bucket.url)
   end
 end
