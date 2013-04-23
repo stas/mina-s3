@@ -32,6 +32,14 @@ set_default :aws_secret_access_key, 'CHANGE THIS'
 
 set_default :s3_files_pattern, ['assets/**/**', '*.html', '*.css']
 
+# ### s3_move_from_to
+# Renames local files location
+# Ex.: {:from => 'public/', :to => ''}
+#   will rename everything in public dir to root dir on S3
+# Defaults to: false
+
+set_default :s3_move_from_to, false
+
 # ### s3
 # Sets the s3 connection object
 
@@ -62,10 +70,13 @@ namespace 'aws:s3' do
     files = Dir.glob(s3_files_pattern).each do |file|
       if !File.directory?(file)
         path = file
-        # Remove preceding slash for S3
-        path.gsub!(/^\//, "")
 
         contents = open(file)
+
+        # Do some renaming if any
+        path.gsub!(s3_move_from_to[:from], s3_move_from_to[:to]) if s3_move_from_to
+        # Remove preceding slash for S3
+        path.gsub!(/^\//, "")
 
         types = MIME::Types.type_for(File.basename(file))
         if types.empty?
