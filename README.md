@@ -35,6 +35,7 @@ set :s3_bucket_name, 'mina'
 set :aws_access_key_id, 'YOUR_KEY'
 set :aws_secret_access_key, 'YOUR_SECRET'
 set :s3_files_pattern, ['assets/**/**', '*.html']
+set :s3_region, 'eu-west-1'
 ```
 
 Update `deploy` task to invoke `aws:s3:deploy` task:

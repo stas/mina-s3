@@ -40,6 +40,10 @@ set_default :s3_files_pattern, ['assets/**/**', '*.html', '*.css']
 
 set_default :s3_move_from_to, false
 
+# ### s3_region
+# Sets the AWS region
+set_default :s3_region, 'us-east-1'
+
 # ### s3
 # Sets the s3 connection object
 
@@ -49,7 +53,8 @@ set_default :s3, proc{
 
   AWS::S3.new(
     :access_key_id => aws_access_key_id,
-    :secret_access_key => aws_secret_access_key
+    :secret_access_key => aws_secret_access_key,
+    :region => s3_region
   )
 }
 
@@ -67,7 +72,7 @@ namespace 'aws:s3' do
   desc 'Starts a deploy to AWS S3'
   task :deploy do
     print_str '-----> Starting AWS S3 deployment'
-    files = Dir.glob(s3_files_pattern).each do |file|
+    Dir.glob(s3_files_pattern).each do |file|
       if !File.directory?(file)
         path = file
 
@@ -88,7 +93,7 @@ namespace 'aws:s3' do
         s3_bucket.objects[path].write(contents, options)
         print_str 'Deployed ~> %s%s' % [s3_bucket.url, path]
       end # if
-    end # files.each
+    end # each
   end
 
   # ### aws:s3:empty
