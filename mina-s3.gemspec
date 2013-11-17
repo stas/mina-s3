@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
   gem.description   = %q{Adds AWS S3 support for mina.}
   gem.summary       = %q{Deploy to S3 using mina.}
   gem.homepage      = 'https://github.com/stas/mina-s3'
+  gem.license       = 'MIT'
 
   gem.files         = `git ls-files`.split($/)
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
